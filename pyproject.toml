@@ -1,0 +1,16 @@
+[project]
+name = "ff7-harness"
+version = "0.1.0"
+description = "Persistent, observable control harness for FINAL FANTASY VII on Steam"
+requires-python = ">=3.10"
+dependencies = ["Pillow>=9"]
+
+[project.scripts]
+ff7-harness = "ff7_harness.cli:main"
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["ff7_harness*"]
