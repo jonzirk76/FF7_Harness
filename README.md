@@ -2,6 +2,8 @@
 
 An experimental harness for an AI agent to learn and play the **2026 Steam rerelease of the original FINAL FANTASY VII** on Linux. The intended design pairs persistent memory and reusable control skills with an LLM supervisor. This repository currently contains the first executable slice: X11 window discovery, screenshots, short keyboard inputs, an append-only event log, and durable objectives.
 
+The repeatable play-and-build procedure is in [docs/workplan.md](docs/workplan.md). It uses only observations from the running game and the run database; no game guides or spoilers are used.
+
 ## Ground rules
 
 - Use normal gameplay. Do not activate speed, encounter suppression, or battle boost.
