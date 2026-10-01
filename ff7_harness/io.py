@@ -59,16 +59,20 @@ ALLOWED_KEYS = frozenset({
 })
 
 
-def press(window_id: int, key: str, duration: float) -> None:
+def press(window_id: int, key: str, duration: float, *, focus: bool = True) -> None:
     if window_id <= 0:
         raise ValueError("window_id must be positive")
     if key not in ALLOWED_KEYS:
         raise ValueError(f"unsupported key: {key}")
     if not 0.02 <= duration <= 2.0:
         raise ValueError("duration must be between 0.02 and 2 seconds")
-    _run("xdotool", "windowactivate", "--sync", str(window_id))
-    _run("xdotool", "keydown", key)
+    if focus:
+        _run("xdotool", "windowactivate", "--sync", str(window_id))
+        key_args = (key,)
+    else:
+        key_args = ("--window", str(window_id), key)
+    _run("xdotool", "keydown", *key_args)
     try:
         time.sleep(duration)
     finally:
-        _run("xdotool", "keyup", key)
+        _run("xdotool", "keyup", *key_args)

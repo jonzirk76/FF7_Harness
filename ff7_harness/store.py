@@ -138,11 +138,16 @@ class Store:
         objectives = [dict(row) for row in self.db.execute(
             "SELECT id, parent_id, title, success_condition, urgency, status FROM objectives WHERE run_id = 1 ORDER BY id"
         )]
+        facts = [dict(row) for row in self.db.execute(
+            """SELECT id, subject, claim, confidence, source_event_id, status
+               FROM facts WHERE run_id = 1 AND status != 'retracted' ORDER BY id DESC LIMIT 20"""
+        )]
         events = [dict(row) for row in self.db.execute(
             "SELECT id, occurred_at, kind, payload_json FROM events WHERE run_id = 1 ORDER BY id DESC LIMIT 10"
         )]
         for event in events:
             event["payload"] = json.loads(event.pop("payload_json"))
         latest = self.latest_frame()
-        return {"run": run, "objectives": objectives, "latest_frame": dict(latest) if latest else None,
+        return {"run": run, "objectives": objectives, "facts": facts,
+                "latest_frame": dict(latest) if latest else None,
                 "recent_events": events}

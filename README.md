@@ -4,6 +4,8 @@ An experimental harness for an AI agent to learn and play the **2026 Steam rerel
 
 The repeatable play-and-build procedure is in [docs/workplan.md](docs/workplan.md). It uses only observations from the running game and the run database; no game guides or spoilers are used.
 
+The [capability catalog](docs/capabilities.md) distinguishes live-verified commands from tested or experimental ones; `python3 -m ff7_harness.cli capabilities` returns its machine-readable form.
+
 ## Ground rules
 
 - Use normal gameplay. Do not activate speed, encounter suppression, or battle boost.
@@ -44,6 +46,12 @@ The default limit is 30 minutes per excursion; `fun budget MINUTES` changes it. 
 
 `act` captures before and after, timestamps the request and result, releases its key even when interrupted, and reports a coarse image difference. It only targets the specified window ID. Key bindings must be established experimentally; `Up` is an example, not an assertion about the game's controls. Input changes focus to the target window.
 
+An action can replace its window (the launcher does this when Play starts). The harness now discovers the replacement and records the after-frame against its new window ID. `act --background` sends X11 events to the specified window without activating it. In the observed opening sequence it produced no confirmed lasting change; focused input advanced the game. Normal `act` focuses the target window.
+
+For animation context, `python3 -m ff7_harness.cli clip --window-id WINDOW_ID --seconds 8 --fps 4 --width 640` records a low-resolution MP4 of only the visible FF7 window. The clip and timestamps live in the persistent run directory; `status` shows the latest clip. This capture does not require the game window to be active, though it should be visible.
+
+A strategy watchdog keeps passive waits and repeated actions bounded. Start a named strategy with `strategy start KEY --objective ID --expected "VISIBLE RESULT" --seconds 60 --stall-limit 3`, then assess observations with `strategy assess progress|information|stalled --source-event EVENT_ID --note "WHAT HAPPENED"`. `strategy status` shows the deadline. Once the deadline or stall limit is reached, the next action or clip is stopped until a new strategy is chosen. Reusing an abandoned key gives it less time and fewer tolerated stalls. Observations and evidence assessments remain available after a deadline so a result captured during an attempt can still be recorded.
+
 To place the run elsewhere, add `--data-dir /path/to/run` **before** the subcommand on every invocation. Each run directory has one SQLite database and a `frames/` directory. SQLite records relative frame paths so moving the run directory preserves the links.
 
 ## Architecture roadmap
@@ -52,7 +60,7 @@ To place the run elsewhere, add `--data-dir /path/to/run` **before** the subcomm
 2. **State perception:** Classify field, menu, dialogue, battle, loading, and unknown. Track character and landmarks with uncertainty. Detect camera motion separately from character motion.
 3. **Navigation:** Learn local movement basis and exits from short probes, then store map transitions and routes. Field scenes, the world map, and vehicles need separate policies.
 4. **Game skills:** Add operations with explicit preconditions, expected results, timeouts, and recovery: `interact`, `navigate_to`, `save_game`, menu actions, and battle actions.
-5. **Supervisor and watchdog:** Supply the current objective, retrieved evidence, screenshot, and available skills. Stop repeated actions that yield neither progress nor information.
+5. **Supervisor and watchdog:** The first persistent watchdog now bounds named strategies. Add automatic progress signals and a supervisor that carries the objective, retrieved evidence, screenshot, and available skills into each decision.
 6. **Save reconciliation:** Associate objectives and facts with observed save checkpoints, and branch or invalidate current-state beliefs after reloads.
 
 The database separates events, frames, objectives, and hypotheses. Free-text retrieval and other game-state tables should be added when real observations show their required shapes. The event log remains the audit trail from which derived beliefs can be corrected.

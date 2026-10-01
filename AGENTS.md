@@ -1,6 +1,6 @@
 # Agent operating rules for this repository
 
-Read [docs/workplan.md](docs/workplan.md) before a play or harness-development session. The long-term objective is to finish the installed original FINAL FANTASY VII through observed play and reusable harness skills.
+Read [docs/workplan.md](docs/workplan.md) and [docs/capabilities.md](docs/capabilities.md) before a play or harness-development session. Run `python3 -m ff7_harness.cli capabilities` and `python3 -m ff7_harness.cli status` to see what is callable, what is verified, and where the game run stands. The long-term objective is to finish the installed original FINAL FANTASY VII through observed play and reusable harness skills.
 
 - Use only the visible game and this run's recorded observations for game knowledge. Do not consult online guides or spoilers, or mine local assets/save files for unseen progression information.
 - Preserve `.ff7-harness/` across sessions. Reconcile the current screenshot, objective, and last confirmed save before acting after a reset.

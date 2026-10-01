@@ -11,6 +11,7 @@ from unittest.mock import patch
 from PIL import Image
 
 from ff7_harness import cli
+from ff7_harness.io import AdapterError, Window
 from ff7_harness.store import Store
 from ff7_harness.vision import pixel_change
 
@@ -46,7 +47,7 @@ class FoundationTests(unittest.TestCase):
                 result = cli.main(["--data-dir", directory, "act", "--window-id", "42",
                                    "--key", "Up", "--seconds", "0.1"])
             self.assertEqual(result, 0)
-            press.assert_called_once_with(42, "Up", 0.1)
+            press.assert_called_once_with(42, "Up", 0.1, focus=True)
             report = json.loads(output.getvalue())
             self.assertAlmostEqual(report["after"]["pixel_change"], 1.0)
             with Store(Path(directory)) as store:
@@ -54,6 +55,24 @@ class FoundationTests(unittest.TestCase):
                 self.assertEqual(kinds, ["action_requested", "observation", "observation",
                                          "action_completed"])
                 self.assertEqual(store.db.execute("SELECT COUNT(*) FROM frames").fetchone()[0], 2)
+
+    def test_action_follows_window_replacement(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            output = io.StringIO()
+            with patch("ff7_harness.cli.capture", side_effect=[png("black"),
+                  AdapterError("old window closed"), png("white")]), \
+                 patch("ff7_harness.cli.discover_windows", return_value=[Window(99, "FINAL FANTASY VII")]), \
+                 patch("ff7_harness.cli.press"), \
+                 patch("ff7_harness.cli.time.sleep"), redirect_stdout(output):
+                result = cli.main(["--data-dir", directory, "act", "--window-id", "42",
+                                   "--key", "Return", "--seconds", "0.1"])
+            self.assertEqual(result, 0)
+            report = json.loads(output.getvalue())
+            self.assertEqual(report["after"]["window_id"], 99)
+            with Store(Path(directory)) as store:
+                event = store.status()["recent_events"][0]
+                self.assertEqual(event["kind"], "action_completed")
+                self.assertTrue(event["payload"]["window_transition"])
 
     def test_identical_images_have_zero_change(self) -> None:
         frame = png("green")

@@ -8,18 +8,18 @@ This is an experimental playthrough. A failed attempt is useful if it narrows wh
 
 ## State that must survive a context reset
 
-Keep the run directory (`.ff7-harness/` by default) intact. At the start of every session, read `python3 -m ff7_harness.cli status`, inspect the latest screenshot and relevant recent events, and reconcile the visible game with the recorded objective and last known save. The database is the run's memory; `docs/experiments.md` records why harness code changed. A model's recollection is a hypothesis until it agrees with the current game observation.
+Keep the run directory (`.ff7-harness/` by default) intact. At the start of every session, read `python3 -m ff7_harness.cli capabilities` and `python3 -m ff7_harness.cli status`, inspect the latest screenshot and relevant recent events, and reconcile the visible game with the recorded objective and last known save. The database is the run's memory; `docs/experiments.md` records why harness code changed. A model's recollection is a hypothesis until it agrees with the current game observation.
 
 Record or retrieve these items as capabilities are added:
 
 | Memory | What it answers | Current state |
 | --- | --- | --- |
-| Timestamped observations and actions | What was actually seen and tried? | SQLite events and frame files exist. |
+| Timestamped observations and actions | What was actually seen and tried? | SQLite events, frame files, and low-resolution clips exist. |
 | Objective tree and urgency | What is the agent trying to achieve, and how will it know? | Persisted objectives exist. |
 | Facts, hypotheses, provenance | What is known, and why is it believed? | Basic fact rows exist; retrieval and revision need work. |
 | Save checkpoints and branches | Which game state does a memory apply to? | Needs implementation and in-game validation. |
 | Locations, landmarks, exits, routes | How can a known place be reached again? | Build after observing real field movement. |
-| Encounters, menus, resources, failed attempts | Which operations and strategies worked? | Add from actual play evidence. |
+| Encounters, menus, resources, failed attempts | Which operations and strategies worked? | Menu and movement facts plus bounded strategy attempts exist; deeper state needs play evidence. |
 | Fun excursions | What drew the agent away, and when should it return? | Durable 30-minute excursions exist. |
 
 ## The normal play loop
@@ -71,6 +71,8 @@ For each decision, retrieve a compact packet in this order: current objective an
 
 These are capability gates, not predictions about the game's plot. Work on the next gate only when play exposes the need.
 
+Gate 1 was met on 2026-10-01: the game window was captured, New Game was selected, and two short Up inputs produced repeatable movement in the first field scene.
+
 | Gate | Play experiment | Evidence required | Likely harness work |
 | --- | --- | --- | --- |
 | 1. Reach controllable play | From the known launcher, discover the game window and enter a controllable state. | A fresh in-game frame and a safe input with a confirmed effect. | Window reacquisition, input calibration, capture during transitions. |
@@ -82,6 +84,6 @@ These are capability gates, not predictions about the game's plot. Work on the n
 
 ## Immediate next experiment
 
-The only live image verified so far is the Steam launcher. First, check whether a game window exists and capture it. If the launcher is still open, inspect it and use the minimum necessary input to start the game. Record what control was used and whether it worked. Once the game presents a controllable state, create or update the objective to reach the next observable state and test one short movement or confirmation input. Avoid guessing key mappings from PC conventions. The first success is a trustworthy input/output trace in the actual game, not a story milestone.
+The current run is at a first field scene on a platform. A visible dialogue asked Cloud to follow, and the persistent objective is to follow the group toward an observed transition or interaction. At the next session start, capture a fresh frame and reconcile it with the last movement observation; no game save has been confirmed. Use short directional probes to learn the local movement basis and identify a route, then build a reusable navigation operation from the traces. Focused Return and Up have confirmed effects in the observed states. Background input has no confirmed effect in this game and should remain experimental. Do not infer the route from outside knowledge.
 
 Use `docs/experiments.md` for the human-readable result, leave frames and the SQLite database in the ignored run directory, and make a commit whose description connects the observation to any harness change.
